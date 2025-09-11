@@ -1,0 +1,18 @@
+.container {
+  padding: 1.5rem;
+  background-color: #ffe5e5;
+  border: 1px solid #ff0000;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.text {
+  font-weight: bold;
+  color: #ff0000;
+  margin-bottom: 0.5rem;
+}
+
+.details {
+  font-size: 0.9rem;
+  color: #800000;
+}
