@@ -1,18 +1,11 @@
 'use client';
 
-import css from './NoteError.module.css';
-
-interface NoteErrorProps {
+interface ErrorProps {
   error: Error;
 }
 
-const NoteError = ({ error }: NoteErrorProps) => {
-  return (
-    <div className={css.container}>
-      <p className={css.title}>⚠️ Could not fetch note details</p>
-      <p className={css.message}>{error.message}</p>
-    </div>
-  );
+const Error = ({ error }: ErrorProps) => {
+  return <p>Could not fetch note details. {error.message}</p>;
 };
 
-export default NoteError;
+export default Error;
