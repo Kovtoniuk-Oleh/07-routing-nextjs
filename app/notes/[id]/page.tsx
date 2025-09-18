@@ -3,11 +3,11 @@ import NoteDetailsClient from './NoteDetails.client';
 import { fetchNoteById } from '@/lib/api';
 
 interface NoteDetailsProps {
-  params: { id: string }; // 👈 об’єкт, не Promise
+  params: Promise<{ id: string }>;
 }
 
 const NoteDetails = async ({ params }: NoteDetailsProps) => {
-  const { id } = params; // без await
+  const { id } = await params;
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
@@ -17,7 +17,7 @@ const NoteDetails = async ({ params }: NoteDetailsProps) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NoteDetailsClient noteId={id} /> {/* передаємо id */}
+      <NoteDetailsClient />
     </HydrationBoundary>
   );
 };
