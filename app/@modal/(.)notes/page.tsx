@@ -6,11 +6,12 @@ type Props = {
   params: { id: string };
 };
 
-const NotePreview = async ({ params }: Props) => {
+const NotePreview = ({ params }: Props) => {
   const { id } = params;
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
+  // Prefetch синхронно перед рендером
+  queryClient.prefetchQuery({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
   });
