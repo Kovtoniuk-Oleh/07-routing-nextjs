@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useDebounce, useDebouncedCallback } from 'use-debounce';
-import { fetchNotes } from '@/lib/api';
-import { NoteTags, type Tag, type Tags } from '@/types/note';
+import { fetchNotes, type FetchNotesResponse } from '@/lib/api';
+import { type Tag, type Tags } from '@/types/note';
 import SearchBox from '@/components/SearchBox/SearchBox';
 import NoteList from '@/components/NoteList/NoteList';
 import NoteForm from '@/components/NoteForm/NoteForm';
@@ -12,28 +11,28 @@ import Modal from '@/components/Modal/Modal';
 import Pagination from '@/components/Pagination/Pagination';
 import { Toaster } from 'react-hot-toast';
 import css from './Notes.module.css';
+import { useQuery } from '@tanstack/react-query';
 
 interface NotesClientProps {
   categories: Tags;
-  category: Exclude<Tag, 'All'> | undefined;
+  category: Exclude<Tag, 'All'> | undefined; // 'All' виключено
 }
 
 export default function NotesClient({ categories, category }: NotesClientProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery] = useDebounce(query, 300);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data, isLoading, isError, error, isSuccess } = useQuery({
+  const { data, isLoading, isError, error, isSuccess } = useQuery<FetchNotesResponse, Error>({
     queryKey: ['notes', { search: debouncedQuery, page, category }],
     queryFn: () =>
       fetchNotes({
         search: debouncedQuery,
         page,
-        tag: category ?? null,
+        tag: category ?? null, // 👈 "All" вже немає, просто null для усіх
       }),
     refetchOnMount: false,
-    placeholderData: keepPreviousData,
   });
 
   const totalPages = data?.totalPages ?? 1;
@@ -49,7 +48,6 @@ export default function NotesClient({ categories, category }: NotesClientProps) 
 
   const trimmedQuery = query.trim();
   let emptyMessage = 'There are no notes yet. Create the first one!';
-
   if (trimmedQuery) {
     emptyMessage = category
       ? `No notes match your search in the "${category}" category.`
@@ -58,21 +56,8 @@ export default function NotesClient({ categories, category }: NotesClientProps) 
     emptyMessage = `There are no notes in the "${category}" category yet.`;
   }
 
-  if (isLoading) {
-    return (
-      <p className={css.status} role="status">
-        Loading notes, please wait...
-      </p>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <p className={css.status} role="status">
-        Could not fetch notes. {error instanceof Error && error.message}
-      </p>
-    );
-  }
+  if (isLoading) return <p className={css.status}>Loading notes...</p>;
+  if (isError || !data) return <p className={css.status}>Could not fetch notes. {error?.message}</p>;
 
   return (
     <div className={css.app}>
@@ -80,7 +65,7 @@ export default function NotesClient({ categories, category }: NotesClientProps) 
       <header className={css.toolbar}>
         <SearchBox onChange={onQueryChange} />
         {totalPages > 1 && <Pagination totalPages={totalPages} page={page} setPage={setPage} />}
-        <button className={css.button} onClick={handleOpenModal} aria-label="Create new note">
+        <button className={css.button} onClick={handleOpenModal}>
           + Create note
         </button>
       </header>
@@ -91,7 +76,7 @@ export default function NotesClient({ categories, category }: NotesClientProps) 
       {isModalOpen && (
         <Modal onClose={handleCloseModal}>
           <NoteForm
-            categories={[...categories]} // ✅ передаємо mutable копію
+            categories={categories.filter((c) => c !== 'All')}
             onSubmit={handleCloseModal}
             onCancel={handleCloseModal}
           />

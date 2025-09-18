@@ -1,22 +1,25 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { fetchNoteById } from '@/lib/api';
+import { fetchNoteById, type Note } from '@/lib/api';
 import css from './NoteDetails.module.css';
 
-const NoteDetailsClient = () => {
-  const { id } = useParams<{ id: string }>();
+interface NoteDetailsClientProps {
+  noteId: string; // 👈 приймаємо id як пропс
+}
+
+export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
   const router = useRouter();
 
   const {
     data: note,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
-    enabled: !!id, // запит запускається лише якщо є id
+  } = useQuery<Note, Error>({
+    queryKey: ['note', noteId],
+    queryFn: () => fetchNoteById(noteId),
+    enabled: !!noteId,
     refetchOnMount: false,
   });
 
@@ -59,6 +62,4 @@ const NoteDetailsClient = () => {
       </div>
     </section>
   );
-};
-
-export default NoteDetailsClient;
+}

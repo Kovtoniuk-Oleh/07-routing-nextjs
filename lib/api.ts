@@ -1,5 +1,6 @@
+// lib/api.ts
 import axios from 'axios';
-import type { Note, Tag } from '../types/note';
+import type { Note as NoteType, Tag } from '../types/note'; // NoteType замість Note
 
 axios.defaults.baseURL = 'https://notehub-public.goit.study/api/';
 axios.defaults.headers.common['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}`;
@@ -10,14 +11,17 @@ interface FetchNotesParams {
   search?: string;
   page?: number;
   perPage?: number;
-  tag?: Tag | null; // null або 'All' означає без фільтра
+  tag?: Tag | null;
   sortBy?: SortBy;
 }
 
-interface FetchNotesResponse {
-  notes: Note[];
+export interface FetchNotesResponse {
+  notes: NoteType[];
   totalPages: number;
 }
+
+// Тепер явно експортуємо Note
+export type Note = NoteType;
 
 export const fetchNotes = async (params: FetchNotesParams = {}): Promise<FetchNotesResponse> => {
   const { search = '', page = 1, perPage = 12, tag, sortBy } = params;
@@ -34,17 +38,17 @@ export const fetchNotes = async (params: FetchNotesParams = {}): Promise<FetchNo
   return data;
 };
 
-export const fetchNoteById = async (id: string): Promise<Note> => {
-  const { data } = await axios.get<Note>(`notes/${id}`);
+export const fetchNoteById = async (id: string): Promise<NoteType> => {
+  const { data } = await axios.get<NoteType>(`notes/${id}`);
   return data;
 };
 
-export const createNote = async (title: string, content: string, tag: Tag): Promise<Note> => {
-  const { data } = await axios.post<Note>('notes', { title, content, tag });
+export const createNote = async (title: string, content: string, tag: Tag): Promise<NoteType> => {
+  const { data } = await axios.post<NoteType>('notes', { title, content, tag });
   return data;
 };
 
-export const deleteNote = async (id: string): Promise<Note> => {
-  const { data } = await axios.delete<Note>(`notes/${id}`);
+export const deleteNote = async (id: string): Promise<NoteType> => {
+  const { data } = await axios.delete<NoteType>(`notes/${id}`);
   return data;
 };
