@@ -1,20 +1,19 @@
 import Link from 'next/link';
 import css from './SidebarNotes.module.css';
-import { NoteTags } from '@/types/note';
+import { Tags } from '@/types/note';
 
-const SidebarNotes = () => {
+const SidebarNotes = async () => {
+  const categories: Tags = Tags;
+
   return (
     <ul className={css.menuList}>
-      {NoteTags.map((tag) => {
-        const href = tag === 'All' ? '/notes/filter' : `/notes/filter/${tag}`;
-        return (
-          <li key={tag} className={css.menuItem}>
-            <Link href={href} scroll={false} className={css.menuLink}>
-              {tag}
-            </Link>
-          </li>
-        );
-      })}
+      {categories.map((category) => (
+        <li key={category} className={css.menuItem}>
+          <Link href={`/notes/filter/${category}`} scroll={false} className={css.menuLink}>
+            {category}
+          </Link>
+        </li>
+      ))}
     </ul>
   );
 };

@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import TagsMenu from '../TagsMenu/TagsMenu';
+import { Tags } from '@/types/note';
 import css from './Header.module.css';
-import { NoteTags } from '@/types/note';
 
-export default function Header() {
+const Header = () => {
+  const categories = Tags;
+
   return (
     <header className={css.header}>
       <Link href="/" aria-label="Home" className={css.headerLink}>
@@ -17,10 +19,12 @@ export default function Header() {
             </Link>
           </li>
           <li className={css.navigationItem}>
-            <TagsMenu categories={NoteTags} />
+            <TagsMenu categories={categories} />
           </li>
         </ul>
       </nav>
     </header>
   );
-}
+};
+
+export default Header;

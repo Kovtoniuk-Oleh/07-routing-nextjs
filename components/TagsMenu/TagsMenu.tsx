@@ -2,41 +2,38 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Tags } from '../../types/note';
 import css from './TagsMenu.module.css';
-import { NoteTags, type Tag } from '@/types/note';
 
 interface TagsMenuProps {
-  categories?: readonly Tag[];
+  categories: Tags;
 }
 
-export default function TagsMenu({ categories = NoteTags }: TagsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleMenu = () => setIsOpen((prev) => !prev);
-  const closeMenu = () => setIsOpen(false);
+const TagsMenu = ({ categories }: TagsMenuProps) => {
+  const [isNotesOpen, setIsNotesOpen] = useState<boolean>(false);
 
   return (
     <div className={css.menuContainer}>
-      <button className={css.menuButton} onClick={toggleMenu} aria-haspopup="true" aria-expanded={isOpen}>
-        Notes {isOpen ? '▾' : '▴'}
+      <button className={css.menuButton} onClick={() => setIsNotesOpen(!isNotesOpen)}>
+        Notes {isNotesOpen ? '▾' : '▴'}
       </button>
 
-      {isOpen && (
-        <ul className={css.menuList}>
-          {categories.map((tag) => (
-            <li key={tag} className={css.menuItem}>
-              <Link
-                href={`/notes/filter/${tag === 'All' ? '' : tag}`}
-                className={css.menuLink}
-                scroll={false}
-                onClick={closeMenu}
-              >
-                {tag}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className={`${css.menuList} ${isNotesOpen ? css.menuListOpen : ''}`}>
+        {categories.map((category) => (
+          <li key={category} className={css.menuItem}>
+            <Link
+              href={'/notes/filter/' + category}
+              scroll={false}
+              className={css.menuLink}
+              onClick={() => setIsNotesOpen(false)}
+            >
+              {category}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
+
+export default TagsMenu;

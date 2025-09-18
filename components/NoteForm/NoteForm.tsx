@@ -1,72 +1,69 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from 'formik';
+import { Formik, Form, ErrorMessage, type FormikHelpers, Field } from 'formik';
 import * as Yup from 'yup';
-import { NoteTags, type Tag } from '@/types/note';
+import { Tags } from '@/types/note';
 import { createNote } from '@/lib/api';
+import { Loading } from 'notiflix';
 import toast from 'react-hot-toast';
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
-  initialTitle?: string;
-  initialContent?: string;
-  initialTag?: Tag;
-  categories?: Tag[];
+  categories: Tags;
   onSubmit: () => void;
   onCancel: () => void;
 }
 
-interface FormValues {
+interface InitialValues {
   title: string;
   content: string;
-  tag: Tag;
+  tag: Tags[number];
 }
 
-export default function NoteForm({
-  initialTitle = '',
-  initialContent = '',
-  initialTag = 'Todo',
-  categories = NoteTags.filter((tag) => tag !== 'All'),
-  onSubmit,
-  onCancel,
-}: NoteFormProps) {
-  const queryClient = useQueryClient();
+const initialValues: InitialValues = {
+  title: '',
+  content: '',
+  tag: 'Todo',
+};
 
-  const validationSchema = Yup.object().shape({
+export default function NoteForm({ categories, onSubmit, onCancel }: NoteFormProps) {
+  const formScheme = Yup.object().shape({
     title: Yup.string()
       .min(3, 'Title must be at least 3 characters')
       .max(50, 'Title must be less or equal to 50 characters')
       .required('Title is required'),
     content: Yup.string().max(500, 'Content must be less or equal to 500 characters'),
-    tag: Yup.string().oneOf(categories).required('Tag is required'),
+    tag: Yup.string().oneOf(categories),
   });
 
-  const mutation = useMutation({
-    mutationFn: async ({ title, content, tag }: FormValues) => {
-      return await createNote(title, content, tag);
+  const queryClient = useQueryClient();
+
+  const noteCreation = useMutation({
+    mutationFn: async ({ title, content, tag }: InitialValues) => {
+      const data = await createNote(title, content, tag);
+      return data;
     },
     onSuccess: () => {
-      toast.success('Note created!');
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
       onSubmit();
+      Loading.remove();
+      toast.success('Note has been successfully created!');
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
     },
     onError: () => {
-      toast.error('Failed to create note.');
+      Loading.remove();
+      toast.error('Error occured while creating note!');
     },
   });
 
-  const handleSubmit = (values: FormValues, actions: FormikHelpers<FormValues>) => {
-    mutation.mutate(values);
+  const onFormSubmit = (values: InitialValues, actions: FormikHelpers<InitialValues>) => {
+    Loading.hourglass();
+    noteCreation.mutate(values);
     actions.resetForm();
   };
 
   return (
-    <Formik
-      initialValues={{ title: initialTitle, content: initialContent, tag: initialTag }}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
-    >
+    <Formik initialValues={initialValues} onSubmit={onFormSubmit} validationSchema={formScheme}>
       <Form className={css.form}>
         <div className={css.formGroup}>
           <label htmlFor="title">Title</label>
@@ -76,18 +73,20 @@ export default function NoteForm({
 
         <div className={css.formGroup}>
           <label htmlFor="content">Content</label>
-          <Field as="textarea" name="content" id="content" rows={6} className={css.textarea} />
+          <Field as="textarea" name="content" id="content" rows={8} className={css.textarea} />
           <ErrorMessage name="content" component="span" className={css.error} />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor="tag">Tag</label>
           <Field as="select" name="tag" id="tag" className={css.select}>
-            {categories.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option>
-            ))}
+            {categories
+              .filter((tag) => tag !== 'All')
+              .map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
           </Field>
           <ErrorMessage name="tag" component="span" className={css.error} />
         </div>
@@ -96,8 +95,8 @@ export default function NoteForm({
           <button type="button" className={css.cancelButton} onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className={css.submitButton} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating...' : 'Create note'}
+          <button type="submit" className={css.submitButton}>
+            Create note
           </button>
         </div>
       </Form>

@@ -1,65 +1,49 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { fetchNoteById, type Note } from '@/lib/api';
+import { fetchNoteById } from '@/lib/api';
 import css from './NoteDetails.module.css';
 
-interface NoteDetailsClientProps {
-  noteId: string; // 👈 приймаємо id як пропс
-}
-
-export default function NoteDetailsClient({ noteId }: NoteDetailsClientProps) {
-  const router = useRouter();
-
+const NoteDetailsClient = () => {
+  const { id } = useParams<{ id: string }>();
   const {
     data: note,
     isLoading,
     error,
-  } = useQuery<Note, Error>({
-    queryKey: ['note', noteId],
-    queryFn: () => fetchNoteById(noteId),
-    enabled: !!noteId,
+  } = useQuery({
+    queryKey: ['note', id],
+    queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
   });
 
-  if (isLoading) {
-    return (
-      <div className={css.loading}>
-        <p>Loading note details...</p>
-      </div>
-    );
-  }
+  const router = useRouter();
 
-  if (error || !note) {
-    return (
-      <div className={css.error}>
-        <p>Something went wrong. Please try again later.</p>
-        <button className={css.backBtn} onClick={() => router.back()}>
-          ← Back
-        </button>
-      </div>
-    );
-  }
+  if (isLoading) return <p>Loading, please wait...</p>;
+  if (error || !note) return <p>Something went wrong.</p>;
 
   return (
-    <section className={css.wrapper} aria-labelledby="note-title">
-      <button className={css.backBtn} onClick={() => router.back()}>
-        ← Back
+    <section className={css.wrapper}>
+      <button
+        className={css.backBtn}
+        onClick={() => {
+          router.back();
+        }}
+      >
+        Back
       </button>
-
       <div className={css.container}>
-        <article className={css.item}>
-          <header className={css.header}>
-            <h2 id="note-title">{note.title}</h2>
+        <div className={css.item}>
+          <div className={css.header}>
+            <h2>{note.title}</h2>
             <p className={css.tag}>{note.tag}</p>
-          </header>
+          </div>
           <p className={css.content}>{note.content}</p>
-          <p className={css.date}>
-            {note.updatedAt ? `Updated: ${note.updatedAt}` : `Created: ${note.createdAt}`}
-          </p>
-        </article>
+          <p className={css.date}>{note.updatedAt ?? note.createdAt}</p>
+        </div>
       </div>
     </section>
   );
-}
+};
+
+export default NoteDetailsClient;
